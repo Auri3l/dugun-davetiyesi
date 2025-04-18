@@ -6,24 +6,62 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Ana palet – şeftali tonları */
-      --primary: #E8755A;          /* ana vurgu rengi */
-      --primary-dark: #C86048;     /* koyu tonu */
-      --primary-light: #F1A995;    /* açık tonu */
-      --text-dark: #442723;        /* metin için kontrastlı koyu */
-      --text-muted: #6b4b46;       /* ikincil metin */
-      --surface: #fff7f5;          /* arka plan yumuşak */
+      /* Şeftali tonlu ana palet */
+      --primary: #E8755A;
+      --primary-dark: #C86048;
+      --primary-light: #F1A995;
+      --text-dark: #442723;
+      --text-muted: #6b4b46;
+      --surface: #fff7f5;
+    }
+
+    /* Arka plan animasyon – yumuşak degrade dalgası */
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     body {
       margin: 0;
       padding: 0;
       font-family: 'Inter', sans-serif;
-      background: var(--surface);
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Degrade animasyon katmanı */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background: linear-gradient(135deg,
+        var(--primary-light) 0%,
+        var(--surface) 25%,
+        var(--primary) 50%,
+        var(--surface) 75%,
+        var(--primary-light) 100%);
+      background-size: 300% 300%;
+      animation: gradientShift 25s ease-in-out infinite;
+    }
+
+    /* Hafif bokeh parçacıkları */
+    .bubble {
+      position: fixed;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      pointer-events: none;
+      z-index: -1;
+      animation: float 18s linear infinite;
+    }
+    @keyframes float {
+      from { transform: translateY(100vh) scale(0.8); opacity: 0; }
+      to   { transform: translateY(-10vh) scale(1.2); opacity: 0.6; }
     }
 
     .card {
@@ -31,128 +69,80 @@
       max-width: 600px;
       width: 90%;
       border-radius: 1.5rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, .05);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .07);
       padding: 2.5rem 3rem;
       text-align: center;
+      position: relative;
+      z-index: 1;
     }
 
-    .card h1 {
-      margin-top: 0;
-      font-size: 2.5rem;
-      color: var(--primary);
-    }
-    .card h2 {
-      margin: 0.5rem 0;
-      font-size: 1.5rem;
-      font-weight: 400;
-      color: var(--text-muted);
-    }
-    .divider {
-      width: 60px;
-      height: 2px;
-      background: var(--primary);
-      margin: 1.2rem auto;
-    }
-    .card p {
-      margin: 0.8rem 0;
-      color: var(--text-muted);
-      font-size: 1rem;
-    }
-    .details {
-      margin-top: 1.5rem;
-      font-size: 1.1rem;
-      color: var(--text-dark);
-    }
-    img.qr {
-      margin-top: 1.5rem;
-      width: 100px;
-      height: 100px;
-    }
-    img.banner {
-      width: 140px;
-      height: auto;
-      border-radius: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 8px rgba(0,0,0,.08);
-    }
-    #countdown {
-      margin: 1.2rem 0 0.5rem;
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: var(--primary-dark);
-    }
-    iframe {
-      width: 100%;
-      height: 320px;
-      border: 0;
-      border-radius: 1rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,.06);
-    }
+    .card h1 { margin-top: 0;font-size: 2.5rem;color: var(--primary); }
+    .card h2 { margin: 0.5rem 0;font-size: 1.5rem;font-weight: 400;color: var(--text-muted); }
+    .divider { width: 60px;height: 2px;background: var(--primary);margin: 1.2rem auto; }
+    .card p { margin: 0.8rem 0;color: var(--text-muted);font-size: 1rem; }
+    .details { margin-top: 1.5rem;font-size: 1.1rem;color: var(--text-dark); }
+    img.qr { margin-top: 1.5rem;width: 100px;height: 100px; }
+    img.banner { width: 140px;height: auto;border-radius: 1rem;margin-bottom: 1rem;box-shadow: 0 4px 8px rgba(0,0,0,.08); }
+    #countdown { margin: 1.2rem 0 0.5rem;font-size: 1.4rem;font-weight: 600;color: var(--primary-dark); }
+    iframe.map { width: 100%;height: 320px;border: 0;border-radius: 1rem;box-shadow: 0 2px 6px rgba(0,0,0,.06); }
   </style>
 </head>
 <body>
-  <div class="card">
-    <!-- Üst banner -->
-    <img src="banner_placeholder.png" alt="Yiğit &amp; Gözde" class="banner">
+  <!-- Bokeh efektli rastgele kabarcıklar -->
+  <script>
+    const bubbleCount = 18;
+    for(let i=0;i<bubbleCount;i++){
+      const b=document.createElement('div');
+      b.className='bubble';
+      const size=Math.random()*80+40; //40‑120px
+      b.style.width=b.style.height=size+'px';
+      b.style.left=Math.random()*100+'vw';
+      b.style.animationDelay=(Math.random()*-20)+'s';
+      b.style.opacity=Math.random()*0.5+0.1;
+      document.body.appendChild(b);
+    }
+  </script>
 
-    <!-- Başlık -->
+  <div class="card">
+    <img src="banner_placeholder.png" alt="Gözde &amp; Yiğit" class="banner">
     <h1>Gözde &amp; Yiğit</h1>
     <h2>19 Temmuz 2025</h2>
-
     <div class="divider"></div>
-
     <p>Sevdiklerimizle birlikte, hayatlarımızı birleştiriyoruz.</p>
     <p>Bu özel günde sizleri aramızda görmekten mutluluk duyarız.</p>
-
-    <!-- Detaylar -->
     <div class="details">
       <p><strong>Tarih:</strong> 19 Temmuz 2025, Cumartesi</p>
       <p><strong>Saat:</strong> 19:00</p>
       <p><strong>Yer:</strong> Svadba Düğün Salonu<br>Tuzla, İstanbul</p>
     </div>
-
-    <!-- Geri sayım -->
     <div id="countdown">Yükleniyor...</div>
-
     <div class="divider" style="margin-top:1rem;"></div>
-
-    <!-- Harita Embed -->
-    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3762.69561750923!2d29.310303276556517!3d40.81494283130632!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cadd80fdf511ef%3A0xfaec609de05b6131!2sSvadba%20Tuzla%20Marina!5e1!3m2!1str!2str!4v1744898920643!5m2!1str!2str" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-
-    <!-- QR Kod -->
+    <iframe class="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3762.69561750923!2d29.310303276556517!3d40.81494283130632!2m3!1f0!2f0;3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cadd80fdf511ef%3A0xfaec609de05b6131!2sSvadba%20Tuzla%20Marina!5e1!3m2!1str!2str!4v1744898920643!5m2!1str!2str" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     <img src="qr_placeholder.png" alt="Konum QR Kodu" class="qr">
   </div>
 
   <!-- Görünmez arka plan müziği (YouTube) -->
-  <!-- VIDEO_ID kısmını istediğiniz YouTube müzik videosunun ID'siyle değiştirin -->
-  <iframe id="bg-music" style="display:none;" width="0" height="0"
-          src="https://www.youtube.com/embed/xjviMpm0P0Y?autoplay=1&mute=0&loop=1&playlist=VIDEO_ID&controls=0&modestbranding=1&rel=0&playsinline=1"
-          title="Düğün Müziği" frameborder="0" allow="autoplay"></iframe>
+  <iframe id="bg-music" style="position:absolute;left:-9999px;width:1px;height:1px;"
+          src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ&controls=0&modestbranding=1&rel=0&playsinline=1"
+          title="Düğün Müziği" frameborder="0" allow="autoplay; encrypted-media"></iframe>
 
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script>
+    // Geri sayım
     const targetDate = new Date("2025-07-19T19:00:00+03:00").getTime();
     const countdownEl = document.getElementById("countdown");
-
-    function updateCountdown() {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
-
-      if (distance <= 0) {
-        countdownEl.textContent = "Bugün!";
-        clearInterval(interval);
-        return;
-      }
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      countdownEl.textContent = `${days} gün ${hours} saat ${minutes} dk ${seconds} sn`;
-    }
-
+    function updateCountdown(){
+      const now=Date.now();
+      const dist=targetDate-now;
+      if(dist<=0){countdownEl.textContent="Bugün!";clearInterval(int);return;}
+      const d=Math.floor(dist/864e5),h=Math.floor(dist%864e5/36e5),m=Math.floor(dist%36e5/6e4),s=Math.floor(dist%6e4/1e3);
+      countdownEl.textContent=`${d} gün ${h} saat ${m} dk ${s} sn`;}
     updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    const int=setInterval(updateCountdown,1000);
+
+    // YouTube API ile ses açma
+    let player;function onYouTubeIframeAPIReady(){player=new YT.Player('bg-music');}
+    document.addEventListener('click',()=>{if(player&&player.isMuted&&player.isMuted())player.unMute();},{once:true});
   </script>
 </body>
 </html>
